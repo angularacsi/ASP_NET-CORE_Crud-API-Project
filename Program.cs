@@ -4,7 +4,8 @@ using CrudData.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-
+using Crud.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Crud.Data;
 using Microsoft.EntityFrameworkCore;
 using Crud.Services;
@@ -41,7 +42,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 //now i will register my service class to use HttpClient  
 builder.Services.AddScoped<Postservice>(); // this will allow me to use HttpClient in my Postservice class  
-
+builder.Services.AddScoped<IAuthorizationHandler, DeleteProductAuthorizationHandler>();
 //i want to add JWT authentication, so i will register the authentication services here  
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwtSection["Key"];

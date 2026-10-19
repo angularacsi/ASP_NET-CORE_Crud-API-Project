@@ -59,7 +59,14 @@ namespace Crud.Services
                         new Claim(ClaimTypes.Role,user.Role),
                         //new Claim("permission", "Products.View") it was the first
                     };
-
+            if (user.Role == "Admin")
+            {
+                claims.Add(new Claim("permission", "Products.View"));
+            }
+            if (user.Role == "Admin")
+            {
+                claims.Add(new Claim("CanDeleteProduct", "true"));
+            }
             var key = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new Microsoft.IdentityModel.Tokens.SigningCredentials(key, Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256);
             var token = new JwtSecurityToken(
