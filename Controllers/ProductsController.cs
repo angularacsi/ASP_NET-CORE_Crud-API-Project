@@ -23,6 +23,7 @@ namespace Crud.Controllers
             _productRepository = productRepository;
             _logger = logger;
         }
+        [Authorize(Policy = "CanViewProducts")]
         [HttpGet]
 
         public async Task<ActionResult<IEnumerable<ProductResponseDto>>> GetAllProducts()

@@ -37,7 +37,7 @@ builder.Services.AddScoped<IPersonRepository, PersonRepository>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddHttpContextAccessor(); // register the IHttpContextAccessor to access the current user in the service class
 builder.Services.AddScoped<IAuthService, AuthService>();
- // register the password hasher service for hashing passwords  
+// register the password hasher service for hashing passwords  
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 //now i will register my service class to use HttpClient  
 builder.Services.AddScoped<Postservice>(); // this will allow me to use HttpClient in my Postservice class  
@@ -74,6 +74,10 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("CanDeleteProduct", policy =>
     {
         policy.RequireRole("Admin");
+    });
+    options.AddPolicy("CanViewProducts", policy =>
+    {
+        policy.RequireClaim("permission", "Products.View");
     });
 });
 //builder.Services.AddTransient<IPersonRepository, PersonRepository>(); // i have enable this to use dapper DB connection  

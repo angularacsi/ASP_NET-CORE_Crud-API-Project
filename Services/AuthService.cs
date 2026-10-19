@@ -56,8 +56,8 @@ namespace Crud.Services
 
                         // optional: include username as "unique_name"
                         new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
-                        new Claim(ClaimTypes.Role,user.Role)
-
+                        new Claim(ClaimTypes.Role,user.Role),
+                        //new Claim("permission", "Products.View") it was the first
                     };
 
             var key = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
