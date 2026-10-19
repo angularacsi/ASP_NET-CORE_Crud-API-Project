@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "0rAP24Ae060=",
+  "dgSpecHash": "suPXDSe0dlQ=",
   "success": true,
-  "projectFilePath": "D:\\Personal\\Crud\\crud\\Crud.csproj",
+  "projectFilePath": "D:\\Personal\\Crud\\Crud\\Crud.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Craft Silicon\\.nuget\\packages\\azure.core\\1.50.0\\azure.core.1.50.0.nupkg.sha512",
     "C:\\Users\\Craft Silicon\\.nuget\\packages\\azure.identity\\1.17.1\\azure.identity.1.17.1.nupkg.sha512",
