@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Crud.Controllers
 {
-    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class ProductsController : ControllerBase
@@ -16,12 +15,14 @@ namespace Crud.Controllers
         private readonly IProductRepository _productRepository;
         private readonly ILogger<ProductsController> _logger;
         private readonly APiDbContext _aPiDb;
-
-        public ProductsController(APiDbContext aPiDbContext, IProductRepository productRepository, ILogger<ProductsController> logger)
+        private readonly IAuthorizationService _authorizationService;
+        public ProductsController(APiDbContext aPiDbContext, IProductRepository productRepository,
+        ILogger<ProductsController> logger, IAuthorizationService authorizationService)
         {
             _aPiDb = aPiDbContext;
             _productRepository = productRepository;
             _logger = logger;
+            _authorizationService = authorizationService;
         }
         [Authorize(Policy = "CanViewProducts")]
         [HttpGet]
@@ -93,20 +94,33 @@ namespace Crud.Controllers
 
 
 
-        [Authorize(Policy = "CanDeleteProduct")]
-        [HttpDelete("{id}")]
 
+        [Authorize]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var existingProduct = await _productRepository.GetByIdAsync(id);
+
             if (existingProduct == null)
             {
                 return NotFound();
             }
+
+            var authorizationResult = await _authorizationService.AuthorizeAsync(
+                User,
+                existingProduct,
+                "DeleteProductOwner");
+
+            if (!authorizationResult.Succeeded)
+            {
+                return Forbid();
+            }
+
             _productRepository.Delete(existingProduct);
             await _productRepository.SaveAsync();
-            return NoContent();
 
+            return NoContent();
         }
+
     }
 }

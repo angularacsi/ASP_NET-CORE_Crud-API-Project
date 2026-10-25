@@ -7,11 +7,15 @@ namespace Crud.Services
 {
     public class GenerateToken
     {
-    
-    public string GenerateJwtToken(string username, string role, IConfiguration configuration)
+
+        public string GenerateJwtToken(string username, string role, IConfiguration configuration)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var durationInMinutes =
+                Convert.ToDouble(configuration["Jwt:DurationInMinutes"]);
+
+            var expires = DateTime.UtcNow.AddMinutes(durationInMinutes);
             var claims = new[]
             {
             new Claim(ClaimTypes.Name, username),
@@ -21,9 +25,10 @@ namespace Crud.Services
                 issuer: configuration["Jwt:Issuer"],
                 audience: configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddHours(1),
+                expires: expires,
                 signingCredentials: credentials
             );
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-    } }
+    }
+}

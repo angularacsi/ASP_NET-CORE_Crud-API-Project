@@ -18,13 +18,17 @@ namespace Crud.Services
         private readonly string _jwtIssuer;
         private readonly string _jwtAudience;
 
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly RefreshTokenService _refreshTokenService;
 
-
-        public AuthService(IAuthRepository authRepository, IPasswordHasher<User> passwordHasher, IConfiguration configuration)
+        public AuthService(IAuthRepository authRepository, IPasswordHasher<User> passwordHasher, IConfiguration configuration,
+            IRefreshTokenRepository refreshTokenRepository, RefreshTokenService refreshTokenService)
         {
             _authRepository = authRepository;
             _passwordHasher = passwordHasher;
             _configuration = configuration;
+            _refreshTokenRepository = refreshTokenRepository;
+            _refreshTokenService = refreshTokenService;
 
         }
         public async Task<User?> GetUserByUsernameAsync(string username)
@@ -32,7 +36,7 @@ namespace Crud.Services
             throw new NotImplementedException();
         }
 
-        public async Task<string?> LoginAsync(LoginDto loginDto)
+        public async Task<LoginResponseDto?> LoginAsync(LoginDto loginDto)
         {
             var user = await _authRepository.GetUserByUsernameAsync(loginDto.Username);
             if (user == null)
@@ -69,14 +73,35 @@ namespace Crud.Services
             }
             var key = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var creds = new Microsoft.IdentityModel.Tokens.SigningCredentials(key, Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256);
+            //i need to get the expires date from the configuration file and use it to set the expiration of the token
+            var durationInMinutes =
+                Convert.ToDouble(_configuration["Jwt:DurationInMinutes"]);
+
+            var expires = DateTime.UtcNow.AddMinutes(durationInMinutes);
             var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddDays(1),
-                signingCredentials: creds
-            );
-            return new JwtSecurityTokenHandler().WriteToken(token);
+               issuer: _configuration["Jwt:Issuer"],
+               audience: _configuration["Jwt:Audience"],
+               claims: claims,
+               expires: expires,
+               signingCredentials: creds
+           );
+            var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+            var refreshToken = _refreshTokenService.GenerateRefreshToken();
+            var refreshTokenRecord = new RefreshToken
+            {
+                UserId = user.Id,
+                TokenHash = _refreshTokenService.HashToken(refreshToken),
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddDays(7)
+            };
+            await _refreshTokenRepository.AddAsync(refreshTokenRecord);
+
+            return new LoginResponseDto
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                ExpiresAt = expires
+            };
         }
 
         public async Task RegisterAsync(RegisterDto registerDto)

@@ -18,6 +18,7 @@ namespace Crud.Data
         public DbSet<User> User { get; set; }
         //public DbSet<Post> Posts { get; set; }   //i do not want to create table for post because i am using it for api call only
         public DbSet<Postdetails> Postdetails { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         private void UpdateAuditEntities()
         {
