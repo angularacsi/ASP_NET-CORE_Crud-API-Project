@@ -10,5 +10,6 @@ namespace Crud.Interfaces
         Task<LoginResponseDto> LoginAsync(LoginDto loginDto); // Now i want to return the token instead of user object
         Task<User?> GetUserByUsernameAsync(string username);
         Task<bool> UserExistsAsync(string username);
+        Task<LoginResponseDto> RefreshAsync(RefreshRequestDto request);
     }
 }

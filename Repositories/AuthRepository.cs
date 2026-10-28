@@ -8,14 +8,20 @@ namespace Crud.Repositories
 {
     public class AuthRepository : IAuthRepository
     {
-         private readonly ILogger<AuthRepository> _logger;
-         private readonly APiDbContext _aPiDb;
+        private readonly ILogger<AuthRepository> _logger;
+        private readonly APiDbContext _aPiDb;
 
         public AuthRepository(APiDbContext aPiDbContext, ILogger<AuthRepository> logger)
         {
             _aPiDb = aPiDbContext;
             _logger = logger;
-         }
+        }
+
+        public Task<User?> GetUserByIdAsync(int userId)
+        {
+
+            return _aPiDb.User.FirstOrDefaultAsync(u => u.Id == userId);
+        }
 
         public async Task<User?> GetUserByUsernameAsync(string username)
         {

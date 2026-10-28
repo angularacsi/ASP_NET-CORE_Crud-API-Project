@@ -103,6 +103,22 @@ namespace Crud.Services
                 ExpiresAt = expires
             };
         }
+        private async Task<RefreshToken?> ValidateRefreshTokenAsync(string refreshToken)
+        {
+            var hashedToken = _refreshTokenService.HashToken(refreshToken);
+            var storedRefreshToken = await _refreshTokenRepository.GetByTokenHashAsync(hashedToken);
+
+            if (storedRefreshToken == null || storedRefreshToken.ExpiresAt < DateTime.UtcNow)
+            {
+                return null;
+            }
+
+            return storedRefreshToken;
+        }
+        public Task<LoginResponseDto> RefreshAsync(RefreshRequestDto request)
+        {
+            throw new NotImplementedException();
+        }
 
         public async Task RegisterAsync(RegisterDto registerDto)
         {

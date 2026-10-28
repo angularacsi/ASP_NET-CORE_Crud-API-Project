@@ -10,5 +10,8 @@ namespace Crud.Interfaces
         Task RegisterAsync(User users);
 
         Task<User?> GetUserByUsernameAsync(string username);
+
+        Task<User?> GetUserByIdAsync(int userId);
+
     }
 }

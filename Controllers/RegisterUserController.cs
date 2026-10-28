@@ -11,11 +11,11 @@ namespace Crud.Controllers
     {
         private readonly ILogger<RegisterUserController> _logger;
         private readonly IAuthService _authService;
-        public RegisterUserController(IAuthService authService )
+        public RegisterUserController(IAuthService authService)
         {
             _authService = authService;
 
-         }
+        }
         [HttpPost]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterDto registerDto)
         {
@@ -53,8 +53,18 @@ namespace Crud.Controllers
             }
             // make it formated response 
             return Ok(token);
-            
 
+
+        }
+        [HttpPost("Refresh")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshRequestDto request)
+        {
+            var token = await _authService.RefreshAsync(request);
+            if (token == null)
+            {
+                return Unauthorized("Invalid refresh token.");
+            }
+            return Ok(token);
         }
     }
 }
