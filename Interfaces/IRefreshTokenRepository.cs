@@ -9,5 +9,13 @@ namespace Crud.Interfaces
         Task<RefreshToken?> GetByTokenHashAsync(string tokenHash);
 
         Task UpdateAsync(RefreshToken refreshToken);
+
+        Task<bool> RotateAsync(
+            int oldTokenId,
+            string oldTokenHash,
+            DateTime now,
+            string replacementHash,
+            RefreshToken newToken
+        );
     }
 }
