@@ -11,5 +11,6 @@
         public string PasswordHash { get; set; } = string.Empty;
 
         public string Role { get; set; } = "User";
+        public bool IsActive { get; set; } = true;
     }
 }

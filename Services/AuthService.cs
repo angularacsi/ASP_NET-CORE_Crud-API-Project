@@ -26,7 +26,8 @@ namespace Crud.Services
             IPasswordHasher<User> passwordHasher,
             IConfiguration configuration,
             IRefreshTokenRepository refreshTokenRepository,
-            RefreshTokenService refreshTokenService
+            RefreshTokenService refreshTokenService,
+            ILogger<AuthService> logger
         )
         {
             _authRepository = authRepository;
@@ -34,6 +35,7 @@ namespace Crud.Services
             _configuration = configuration;
             _refreshTokenRepository = refreshTokenRepository;
             _refreshTokenService = refreshTokenService;
+            _logger = logger;
         }
 
         public async Task<User?> GetUserByUsernameAsync(string username)
@@ -44,9 +46,14 @@ namespace Crud.Services
         public async Task<LoginResponseDto?> LoginAsync(LoginDto loginDto)
         {
             var user = await _authRepository.GetUserByUsernameAsync(loginDto.Username);
+
             if (user == null)
             {
                 throw new InvalidCredentialsException();
+            }
+            if (!user.IsActive)
+            {
+                throw new InactiveAccountException();
             }
 
             var verificationResult = _passwordHasher.VerifyHashedPassword(
@@ -122,15 +129,11 @@ namespace Crud.Services
 
             if (storedRefreshToken == null || storedRefreshToken.ExpiresAt < DateTime.UtcNow)
             {
-                throw new InvalidOperationException(
-                    "Invalid or expired refresh token. Please log in again."
-                );
+                throw new InvalidRefreshTokenException();
             }
             if (storedRefreshToken.RevokedAt != null)
             {
-                throw new InvalidOperationException(
-                    "This refresh token has been revoked. Please log in again."
-                );
+                throw new InactiveAccountException();
             }
 
             return storedRefreshToken;
@@ -185,7 +188,11 @@ namespace Crud.Services
             var user = await _authRepository.GetUserByIdAsync(storedToken.UserId);
             if (user == null)
             {
-                throw new InvalidOperationException("User not found");
+                throw new UserNotFoundException();
+            }
+            if (!user.IsActive)
+            {
+                throw new InactiveAccountException();
             }
             var (newAccessToken, newExpiresAt) = GenerateAccessToken(user);
             var now = DateTime.UtcNow;

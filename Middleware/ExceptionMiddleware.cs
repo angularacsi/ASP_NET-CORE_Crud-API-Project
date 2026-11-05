@@ -1,6 +1,6 @@
-﻿using Crud.Dtos;
+﻿using System.Net;
+using Crud.Dtos;
 using Crud.Exceptions;
-using System.Net;
 
 namespace Crud.Middleware
 {
@@ -14,6 +14,7 @@ namespace Crud.Middleware
             _next = next;
             _logger = logger;
         }
+
         public async Task InvokeAsync(HttpContext httpContext)
         {
             try
@@ -22,7 +23,7 @@ namespace Crud.Middleware
             }
             catch (Exception ex)
             {
-                // If any problem happnes we have to log the error first 
+                // If any problem happnes we have to log the error first
                 _logger.LogError(ex, "Unhandled exception occured");
 
                 var statusCode = ex switch
@@ -30,23 +31,33 @@ namespace Crud.Middleware
                     UserAlreadyExistsException => StatusCodes.Status409Conflict,
                     InvalidCredentialsException => StatusCodes.Status401Unauthorized,
                     UserNotFoundException => StatusCodes.Status404NotFound,
-                    _ => StatusCodes.Status500InternalServerError
+                    InactiveAccountException => StatusCodes.Status403Forbidden,
+                    InvalidRefreshTokenException => StatusCodes.Status401Unauthorized,
+                    _ => StatusCodes.Status500InternalServerError,
                 };
 
                 httpContext.Response.StatusCode = statusCode;
 
                 httpContext.Response.ContentType = "application/json";
+
+                var message = ex switch
+                {
+                    UserAlreadyExistsException => "User already exists.",
+                    InvalidCredentialsException => "Invalid credentials.",
+                    UserNotFoundException => "User not found.",
+                    InactiveAccountException => "Account is inactive.",
+                    InvalidRefreshTokenException => "Invalid refresh token.",
+                    _ => "An unexpected error occurred.",
+                };
+
                 var response = new ErrorResponseDto
                 {
                     Success = false,
                     StatusCode = statusCode,
-                    Message = ex.Message
+                    Message = message,
                 };
                 await httpContext.Response.WriteAsJsonAsync(response);
-
             }
         }
-
- 
     }
-    }
+}
