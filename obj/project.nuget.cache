@@ -1,9 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "suPXDSe0dlQ=",
+  "dgSpecHash": "vsfJ7wZ9Uho=",
   "success": true,
-  "projectFilePath": "D:\\Personal\\Crud\\Crud\\Crud.csproj",
+  "projectFilePath": "D:\\Personal\\Crud\\crud\\Crud.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\Craft Silicon\\.nuget\\packages\\asp.versioning.abstractions\\8.1.0\\asp.versioning.abstractions.8.1.0.nupkg.sha512",
+    "C:\\Users\\Craft Silicon\\.nuget\\packages\\asp.versioning.http\\8.1.0\\asp.versioning.http.8.1.0.nupkg.sha512",
+    "C:\\Users\\Craft Silicon\\.nuget\\packages\\asp.versioning.mvc\\8.1.0\\asp.versioning.mvc.8.1.0.nupkg.sha512",
+    "C:\\Users\\Craft Silicon\\.nuget\\packages\\asp.versioning.mvc.apiexplorer\\8.1.0\\asp.versioning.mvc.apiexplorer.8.1.0.nupkg.sha512",
     "C:\\Users\\Craft Silicon\\.nuget\\packages\\azure.core\\1.50.0\\azure.core.1.50.0.nupkg.sha512",
     "C:\\Users\\Craft Silicon\\.nuget\\packages\\azure.identity\\1.17.1\\azure.identity.1.17.1.nupkg.sha512",
     "C:\\Users\\Craft Silicon\\.nuget\\packages\\dapper\\2.1.72\\dapper.2.1.72.nupkg.sha512",

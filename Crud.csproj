@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
+     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0-preview.*" />
      <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.11" />
      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />

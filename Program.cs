@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Asp.Versioning;
 using Crud.Authorization;
 using Crud.Data;
 using Crud.Interfaces;
@@ -63,6 +64,30 @@ var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwtSection["Key"];
 var jwtIssuer = jwtSection["Issuer"];
 var jwtAudience = jwtSection["Audience"];
+builder
+    .Services.AddApiVersioning(options =>
+    {
+        // The default API version is 1.0
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+
+        // Use version 1.0 when the client doesn't specify a version
+        options.AssumeDefaultVersionWhenUnspecified = true;
+
+        // Include supported API versions in response headers
+        options.ReportApiVersions = true;
+
+        // Read the API version from the URL
+        options.ApiVersionReader = new UrlSegmentApiVersionReader();
+    })
+    .AddMvc()
+    .AddApiExplorer(options =>
+    {
+        // Group API documentation as v1, v2, etc.
+        options.GroupNameFormat = "'v'VVV";
+
+        // Replace the version placeholder in API URLs
+        options.SubstituteApiVersionInUrl = true;
+    });
 
 builder
     .Services.AddAuthentication(options =>
@@ -133,6 +158,16 @@ builder.Services.AddSwaggerGen(c =>
             Description = "Sample ASP.NET Core Web API with Swagger UI",
         }
     );
+    //i want to add v2 down here for the swagger documentation, so i will add it here
+    c.SwaggerDoc(
+        "v2",
+        new OpenApiInfo
+        {
+            Title = "CrudApiDemo API",
+            Version = "v2",
+            Description = "Sample ASP.NET Core Web API with Swagger UI",
+        }
+    );
 
     //  Add JWT Bearer Authorization to Swagger
     c.AddSecurityDefinition(
@@ -194,6 +229,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CrudApiDemo API v1");
+        c.SwaggerEndpoint("/swagger/v2/swagger.json", "CrudApiDemo API v2");
         c.RoutePrefix = string.Empty;
     });
 }
@@ -216,3 +252,6 @@ app.MapControllers();
 
 // Run the app
 app.Run();
+
+//make the Program class public so that it can be accessed from other classes
+public partial class Program { }

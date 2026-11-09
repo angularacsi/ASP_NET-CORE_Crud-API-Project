@@ -14,10 +14,6 @@ namespace Crud.Services
         private readonly IAuthRepository _authRepository;
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly IConfiguration _configuration;
-        private readonly string _jwtKey;
-        private readonly string _jwtIssuer;
-        private readonly string _jwtAudience;
-
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly RefreshTokenService _refreshTokenService;
 
@@ -85,8 +81,10 @@ namespace Crud.Services
             {
                 claims.Add(new Claim("CanDeleteProduct", "true"));
             }
+            var jwtKey = _configuration["Jwt:Key"]
+                ?? throw new InvalidOperationException("JWT Key is missing from configuration.");
             var key = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-                System.Text.Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])
+                System.Text.Encoding.UTF8.GetBytes(jwtKey)
             );
             var creds = new Microsoft.IdentityModel.Tokens.SigningCredentials(
                 key,
@@ -157,8 +155,10 @@ namespace Crud.Services
                 claims.Add(new Claim("CanDeleteProduct", "true"));
             }
 
+            var jwtKey = _configuration["Jwt:Key"]
+                ?? throw new InvalidOperationException("JWT Key is missing from configuration.");
             var key = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
-                System.Text.Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!)
+                System.Text.Encoding.UTF8.GetBytes(jwtKey)
             );
 
             var credentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(

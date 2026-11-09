@@ -71,5 +71,31 @@ namespace Crud.Repositories
         {
             await _aPiDb.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<Product>> GetPagedAsync(int pageNumber, int pageSize)
+        {
+            return await _aPiDb
+                .Product.AsNoTracking()
+                .OrderBy(p => p.Id)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetCountAsync()
+        {
+            return await _aPiDb.Product.CountAsync();
+        }
+
+        public async Task<IEnumerable<Product>> GetNextPageAsync(int lastId, int pageSize)
+        {
+            //keyset pagination implementation, this method will return the next page of products based on the last product Id and the given page size
+            return await _aPiDb
+                .Product.AsNoTracking()
+                .OrderBy(p => p.Id)
+                .Skip((lastId) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
     }
 }
