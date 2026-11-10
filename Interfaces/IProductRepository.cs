@@ -16,6 +16,9 @@ namespace Crud.Interfaces
         // This method is useful for implementing infinite scrolling or "load more" functionality in a client application.
         Task<IEnumerable<Product>> GetNextPageAsync(int lastId, int pageSize);
 
+        // Returns a paginated list of products based on the given page number, page size and category
+        Task<IEnumerable<Product>> GetPagedAsync(int pageNumber, int pageSize, string? category);
+
         //Add method for displaying the count of products in the database
         Task<int> GetCountAsync();
 

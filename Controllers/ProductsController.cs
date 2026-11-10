@@ -36,7 +36,8 @@ namespace Crud.Controllers
         [HttpGet]
         public async Task<ActionResult<PagedResponseDto<ProductResponseDto>>> GetAllProducts(
             [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? category = null
         )
         {
             // var products = await _productRepository.GetAllAsync();
@@ -55,7 +56,7 @@ namespace Crud.Controllers
             {
                 return BadRequest("Page number cannot be greater than 100.");
             }
-            var products = await _productRepository.GetPagedAsync(pageNumber, pageSize);
+            var products = await _productRepository.GetPagedAsync(pageNumber, pageSize, category);
             var totalRecords = await _productRepository.GetCountAsync();
             var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
             var response = new PagedResponseDto<ProductResponseDto>
@@ -79,7 +80,7 @@ namespace Crud.Controllers
 
         //implement keyset pagination for the GetAllProducts method, so that it can return the next page of products based on the last product Id and the given page size. This method is useful for implementing infinite scrolling or "load more" functionality in a client application.
         [HttpGet("next")]
-        public async Task<ActionResult<IEnumerable<ProductResponseDto>>> GetNextPage(
+        public async Task<ActionResult<KeysetPagedResponseDto<ProductResponseDto>>> GetNextPage(
             [FromQuery] int lastId,
             [FromQuery] int pageSize = 10
         )
@@ -94,18 +95,34 @@ namespace Crud.Controllers
             {
                 return BadRequest("Page size cannot be greater than 100.");
             }
-            var products = await _productRepository.GetNextPageAsync(lastId, pageSize);
-            var response = products
-                .Select(p => new ProductResponseDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    Price = p.Price,
-                    StockQuantity = p.StockQuantity,
-                    Category = p.Category,
-                })
-                .ToList(); // Convert to list to avoid deferred execution issues
+            var products = (await _productRepository.GetNextPageAsync(lastId, pageSize)).ToList();
+
+            var hasMore = products.Count > pageSize;
+
+            if (hasMore)
+            {
+                products.RemoveAt(products.Count - 1);
+            }
+
+            var response = new KeysetPagedResponseDto<ProductResponseDto>
+            {
+                Data = products
+                    .Select(p => new ProductResponseDto
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        Description = p.Description,
+                        Price = p.Price,
+                        StockQuantity = p.StockQuantity,
+                        Category = p.Category,
+                    })
+                    .ToList(),
+
+                HasMore = hasMore,
+
+                NextCursor = products.Count > 0 ? products[^1].Id : null,
+            };
+
             return Ok(response);
         }
 

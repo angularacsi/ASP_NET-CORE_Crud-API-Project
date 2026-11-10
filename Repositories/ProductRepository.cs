@@ -94,6 +94,26 @@ namespace Crud.Repositories
                 .Product.AsNoTracking()
                 .OrderBy(p => p.Id)
                 .Skip((lastId) * pageSize)
+                .Take(pageSize + 1) //fetch one extra record to determine if there is a next page
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Product>> GetPagedAsync(
+            int pageNumber,
+            int pageSize,
+            string? category
+        )
+        {
+            var query = _aPiDb.Product.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(category))
+            {
+                query = query.Where(p => p.Category == category);
+            }
+
+            return await query
+                .OrderBy(p => p.Id)
+                .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
         }
