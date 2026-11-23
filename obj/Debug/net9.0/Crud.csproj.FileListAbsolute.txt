@@ -176,3 +176,7 @@ D:\Personal\Crud\crud\bin\Debug\net9.0\Asp.Versioning.Abstractions.dll
 D:\Personal\Crud\crud\bin\Debug\net9.0\Asp.Versioning.Http.dll
 D:\Personal\Crud\crud\bin\Debug\net9.0\Asp.Versioning.Mvc.dll
 D:\Personal\Crud\crud\bin\Debug\net9.0\Asp.Versioning.Mvc.ApiExplorer.dll
+D:\Personal\Crud\crud\bin\Debug\net9.0\Microsoft.Extensions.Caching.StackExchangeRedis.dll
+D:\Personal\Crud\crud\bin\Debug\net9.0\Pipelines.Sockets.Unofficial.dll
+D:\Personal\Crud\crud\bin\Debug\net9.0\StackExchange.Redis.dll
+D:\Personal\Crud\crud\bin\Debug\net9.0\HealthChecks.SqlServer.dll

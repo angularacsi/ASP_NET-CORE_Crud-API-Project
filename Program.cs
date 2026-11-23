@@ -1,7 +1,10 @@
 ﻿using System.Text;
+using System.Text.Json;
+using System.Threading.RateLimiting;
 using Asp.Versioning;
 using Crud.Authorization;
 using Crud.Data;
+using Crud.HealthChecks;
 using Crud.Interfaces;
 using Crud.Middleware;
 using Crud.Models;
@@ -12,9 +15,13 @@ using CrudData.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -38,6 +45,26 @@ builder.Services.AddControllers();
 
 // I want to add HttpClient for my service class to call external APIs, so I will register it here
 builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache(); // register the memory cache service to use in the service class
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["Redis:ConnectionString"];
+
+    options.InstanceName = builder.Configuration["Redis:InstanceName"];
+});
+
+//i want to register the halth check service to check the health of the application, so i will register it here
+builder.Services.AddHealthChecks();
+
+builder
+    .Services.AddHealthChecks()
+    .AddCheck<RedisHealthCheck>("Redis")
+    .AddSqlServer(
+        connectionString: builder.Configuration.GetConnectionString("DefaultConnection"),
+        name: "SQL Server",
+        tags: new[] { "ready" }
+    );
 
 // i want to registor my repository class to use the DB connection, so i will register it here
 builder.Services.AddScoped<IPostDetailRepository, PostDetailRepository>();
@@ -170,16 +197,17 @@ builder.Services.AddSwaggerGen(c =>
     );
 
     //  Add JWT Bearer Authorization to Swagger
+    // Type = Http + Scheme = "bearer" makes Swagger UI automatically prepend "Bearer " to the token
     c.AddSecurityDefinition(
         "Bearer",
         new OpenApiSecurityScheme
         {
-            Description =
-                "JWT Authorization header using the Bearer scheme. Example: 'Bearer 12345abcdef'",
+            Description = "Enter your JWT token below (without the 'Bearer ' prefix).",
             Name = "Authorization",
             In = ParameterLocation.Header,
-            Type = SecuritySchemeType.ApiKey,
-            Scheme = "Bearer",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
         }
     );
 
@@ -215,10 +243,66 @@ builder.Services.AddCors(options =>
     );
 });
 
+//register the rate limiting service to limit the number of requests per minute for a given IP address, so i will register it here
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy(
+        "FixedWindow",
+        httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                    AutoReplenishment = true,
+                }
+            )
+    );
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 // -------------------------
 // Build the app
 // -------------------------
 var app = builder.Build();
+
+//map the health check endpoint for Redis
+//app.MapHealthChecks("/health/redis");
+// i want to display the health check result in a more readable format, so i will use the following code to display the health check result in a more readable format
+// Liveness endpoint
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
+
+// Readiness endpoint
+app.MapHealthChecks(
+    "/health/ready",
+    new HealthCheckOptions
+    {
+        Predicate = check => check.Tags.Contains("ready"),
+
+        ResponseWriter = async (context, report) =>
+        {
+            context.Response.ContentType = "application/json";
+
+            var response = new
+            {
+                status = report.Status.ToString(),
+
+                checks = report.Entries.Select(entry => new
+                {
+                    name = entry.Key,
+                    status = entry.Value.Status.ToString(),
+                    exception = entry.Value.Exception?.Message,
+                    duration = entry.Value.Duration.ToString(),
+                }),
+            };
+
+            await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+        },
+    }
+);
 
 // -------------------------
 // Configure the HTTP request pipeline
@@ -247,11 +331,14 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+//rate limiting should be added after the authentication and authorization middleware, so i will add it here
+app.UseRateLimiter();
+
 // Map controllers
 app.MapControllers();
 
 // Run the app
 app.Run();
 
-//make the Program class public so that it can be accessed from other classes
+//make the Program class public so that it can be accessed from other classes like test classes, so i will make it public here
 public partial class Program { }
